@@ -24,7 +24,7 @@ def main():
     team = build_trading_team(gemini_model_id=args.model)
 
     # Example composite prompt: research price, propose trade and execute.
-    task = f"Analyze {args.symbol} and suggest a paper trade."
+    task = f"Analyze {args.symbol} and get the account details  and suggest a paper trade."
     print("Running trading team for:", args.symbol)
     report = team.print_response(task, stream=True)
     print(report)

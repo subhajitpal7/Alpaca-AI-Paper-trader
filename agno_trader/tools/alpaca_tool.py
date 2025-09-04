@@ -48,9 +48,18 @@ def _get_account_overview_impl() -> Dict[str, Any]:
     api_key = os.getenv("ALPACA_API_KEY")
     api_secret = os.getenv("ALPACA_SECRET")
     base_url = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+    print(api_key,api_secret,base_url)
+    # if not api_key or not api_secret or tradeapi is None:
+    #     return {
+    #         "simulated": True,
+    #         "cash": 100000,  # Simulated cash
+    #         "buying_power": 100000,  # Simulated buying power
+    #         "equity": 100000,  # Simulated equity
+    #         "status": "ACTIVE",
+    #         "message": "Alpaca not configured; returning simulated account overview."
+    #     }
 
-
-    api = tradeapi.REST(api_key, api_secret, base_url=base_url, api_version='v2')
+    api = tradeapi.REST(key_id=api_key, secret_key=api_secret, base_url=base_url, api_version='v2')
     try:
         acct = api.get_account()
         print(acct)
