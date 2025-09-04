@@ -1,0 +1,26 @@
+[project]
+name = "ptrade"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+	"agno>=0.1.0",
+	"alpaca-trade-api",
+	"pandas",
+	"python-dotenv",
+	"google-genai>=1.33.0",
+	"google-generativeai>=0.8.5",
+	"requests>=2.32.5",
+	"urllib3>=2.5.0",
+]
+
+[tool.uv]
+name = "ptrade-uv"
+description = "UV-managed project to run Agno trader"
+
+[tool.uv.metadata]
+main = "agno_trader.main:main"
+
+[tool.uv.scripts]
+run = { cmd = "python -m agno_trader.main" }
