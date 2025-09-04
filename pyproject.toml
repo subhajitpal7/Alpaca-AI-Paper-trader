@@ -15,12 +15,27 @@ dependencies = [
 	"urllib3>=2.5.0",
 ]
 
-[tool.uv]
-name = "ptrade-uv"
-description = "UV-managed project to run Agno trader"
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "black",
+    "pre-commit",
+]
+
+[tool.setuptools]
+packages = ["agno_trader"]
 
 [tool.uv.metadata]
 main = "agno_trader.main:main"
 
 [tool.uv.scripts]
 run = { cmd = "python -m agno_trader.main" }
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
