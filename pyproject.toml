@@ -15,6 +15,13 @@ dependencies = [
 	"urllib3>=2.5.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "black",
+    "pre-commit",
+]
+
 [tool.setuptools]
 packages = ["agno_trader"]
 
@@ -23,3 +30,12 @@ main = "agno_trader.main:main"
 
 [tool.uv.scripts]
 run = { cmd = "python -m agno_trader.main" }
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
