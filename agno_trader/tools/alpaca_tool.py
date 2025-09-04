@@ -75,6 +75,7 @@ def _get_account_overview_impl() -> dict[str, Any]:
             "cash": float(acct.cash),
             "buying_power": float(acct.buying_power),
             "equity": float(acct.equity),
+            "portfolio_value": float(acct.portfolio_value),
             "status": acct.status,
         }
     except Exception as e:
@@ -135,12 +136,21 @@ def get_portfolio_overview() -> dict[str, Any]:
     total_positions_value = sum(p.get("market_value", 0) for p in positions)
     cash = acct.get("cash", 0)
     equity = acct.get("equity", cash + total_positions_value)
+    portfolio_value = acct.get("portfolio_value", equity)
+
+    print("\n--- Portfolio Summary ---")
+    print(f"Portfolio Value: ${portfolio_value:,.2f}")
+    print(f"Cash: ${cash:,.2f}")
+    print(f"Total Positions Value: ${total_positions_value:,.2f}")
+    print(f"Number of Positions: {len(positions)}")
+    print("-------------------------\n")
 
     return {
         "simulated": acct.get("simulated", True),
         "cash": cash,
         "total_positions_value": total_positions_value,
         "equity": equity,
+        "portfolio_value": portfolio_value,
         "positions_count": len(positions),
         "positions": positions,
     }

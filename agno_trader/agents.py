@@ -3,7 +3,7 @@ from agno.models.google import Gemini
 from agno.team import Team
 from dotenv import load_dotenv
 
-from .tools.alpaca_tool import get_portfolio_overview, place_order
+from .tools.alpaca_tool import get_account_overview, get_portfolio_overview, place_order
 from .tools.market_data import get_stock_price
 
 # Load environment variables from .env (repository root)
@@ -36,8 +36,12 @@ def build_trading_team(gemini_model_id: str = "gemini-2.5-flash") -> Team:
     # Executor: executes orders via Alpaca
     executor = Agent(
         name="Executor",
-        role="Execute orders via Alpaca or simulate if not configured.",
-        tools=[place_order],
+        role=(
+            "Execute orders via Alpaca or simulate if not configured. After executing "
+            "an order, call the get_account_overview tool to fetch and print the "
+            "updated buying power."
+        ),
+        tools=[place_order, get_account_overview],
         model=Gemini(id=gemini_model_id),
     )
 
@@ -48,9 +52,12 @@ def build_trading_team(gemini_model_id: str = "gemini-2.5-flash") -> Team:
         model=Gemini(id=gemini_model_id),
         instructions=[
             (
-                "Researcher: fetch  and corresponding account details of the user "
-                "when asked and return structured JSON {symbol, price, time,{ "
-                "account overview: json}}."
+                "Researcher: fetch and corresponding account details of the user "
+                "when asked. Then, print a human-readable summary of the portfolio "
+                "in a message to the user, including the total portfolio value, "
+                "cash, and number of positions. After printing the summary, return "
+                "a structured JSON with the detailed data: {symbol, price, time, "
+                "{account_overview: json}}."
             ),
             (
                 "Strategist: always call the portfolio overview tool first to get "
