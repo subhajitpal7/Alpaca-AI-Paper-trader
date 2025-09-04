@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Use package import so module can be executed as a package
-from agents import build_trading_team
+from .agents import build_trading_team
 
 
 def main():
@@ -15,11 +15,6 @@ def main():
     parser.add_argument("--model", help="Gemini model id", default="gemini-2.0-flash")
     parser.add_argument("--live", action="store_true", help="Enable live Alpaca orders (use with caution)")
     args = parser.parse_args()
-
-    # If not running in live mode, ensure Alpaca env vars are not present so the executor simulates orders.
-    if not args.live:
-        os.environ.pop("ALPACA_API_KEY", None)
-        os.environ.pop("ALPACA_SECRET", None)
 
     team = build_trading_team(gemini_model_id=args.model)
 

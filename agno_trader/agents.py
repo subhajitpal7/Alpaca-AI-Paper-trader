@@ -2,8 +2,8 @@ from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.team import Team
 
-from tools.market_data import get_stock_price
-from tools.alpaca_tool import place_order, get_portfolio_overview
+from .tools.market_data import get_stock_price
+from .tools.alpaca_tool import place_order, get_portfolio_overview
 from dotenv import load_dotenv
 
 # Load environment variables from .env (repository root)

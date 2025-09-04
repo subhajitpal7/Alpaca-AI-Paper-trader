@@ -15,9 +15,8 @@ dependencies = [
 	"urllib3>=2.5.0",
 ]
 
-[tool.uv]
-name = "ptrade-uv"
-description = "UV-managed project to run Agno trader"
+[tool.setuptools]
+packages = ["agno_trader"]
 
 [tool.uv.metadata]
 main = "agno_trader.main:main"
