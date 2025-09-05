@@ -2,7 +2,7 @@ import argparse
 
 from dotenv import load_dotenv
 
-from .agents import build_trading_team
+from agents import build_trading_team
 
 # Load .env if present
 load_dotenv()
