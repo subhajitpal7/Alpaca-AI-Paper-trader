@@ -1,47 +1,39 @@
 from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.team import Team
-from dotenv import load_dotenv
 
-from tools.alpaca_tool import get_account_overview, get_portfolio_overview, place_order
-from tools.market_data import get_stock_price
-
-# Load environment variables from .env (repository root)
-load_dotenv()
+from tools.alpaca_tool import place_order, get_portfolio_overview, get_positions
+from agno.tools.yfinance import YFinanceTools
 
 
-def build_trading_team(gemini_model_id: str = "gemini-2.5-flash") -> Team:
-    # Researcher: fetches market data
+def build_trading_team(gemini_model_id: str = "gemini-2.0-flash") -> Team:
+    # Researcher: fetches market data and fundamentals for the entire portfolio
     researcher = Agent(
         name="Researcher",
-        role=(
-            "Fetch latest price and recent history for a given ticker and also the "
-            "account overview."
-        ),
-        tools=[get_stock_price, get_portfolio_overview],
+        role="Fetch latest prices and fundamental data for all stocks in the portfolio.",
+        tools=[
+            get_positions,
+            YFinanceTools(
+                stock_price=True, stock_fundamentals=True, company_news=True
+            ),
+        ],
+        model=Gemini(id=gemini_model_id),
+    )
+
+    # Strategist: analyses and outputs trade signals for the entire portfolio
+    strategist = Agent(
+        name="Strategist",
+        role="Analyze the portfolio, market data, and fundamental data to propose a list of trades (buy, sell, or hold) for each stock.",
+        tools=[get_portfolio_overview],
         model=Gemini(id=gemini_model_id),
         debug_mode=True,
     )
 
-    # Strategist: analyses and outputs trade signals
-    strategist = Agent(
-        name="Strategist",
-        role=(
-            "Receive market and account data, and propose a trade signal: 'buy', "
-            "'sell' or 'hold' with qty."
-        ),
-        model=Gemini(id=gemini_model_id),
-    )
-
-    # Executor: executes orders via Alpaca
+    # Executor: executes a list of orders via Alpaca
     executor = Agent(
         name="Executor",
-        role=(
-            "Execute orders via Alpaca or simulate if not configured. After executing "
-            "an order, call the get_account_overview tool to fetch and print the "
-            "updated buying power."
-        ),
-        tools=[place_order, get_account_overview],
+        role="Execute a list of orders via Alpaca or simulate if not configured.",
+        tools=[place_order],
         model=Gemini(id=gemini_model_id),
     )
 
@@ -51,34 +43,11 @@ def build_trading_team(gemini_model_id: str = "gemini-2.5-flash") -> Team:
         members=[researcher, strategist, executor],
         model=Gemini(id=gemini_model_id),
         instructions=[
-            (
-                "Researcher: fetch and corresponding account details of the user "
-                "when asked. Then, print a human-readable summary of the portfolio "
-                "in a message to the user, including the total portfolio value, "
-                "cash, and number of positions. After printing the summary, return "
-                "a structured JSON with the detailed data: {symbol, price, time, "
-                "{account_overview: json}}."
-            ),
-            (
-                "Strategist: always call the portfolio overview tool first to get "
-                "account state and explain the details. Then, based on the "
-                "Researcher's data and portfolio state, propose ONE decision in "
-                "strict JSON form: {action: 'buy'|'sell'|'hold', symbol: str, "
-                "qty: int, reason: str, confidence: float (0-1)}."
-            ),
-            (
-                "Safety: if confidence < 0.6, return action 'hold' regardless of "
-                "other signals."
-            ),
-            (
-                "Executor: if action is 'buy' or 'sell', call place_order(symbol, "
-                "qty, side) and return the order result. Do NOT execute if the "
-                "portfolio overview indicates insufficient buying power."
-            ),
-            (
-                "Leader: coordinate members, validate Strategist's JSON, and "
-                "synthesize final report."
-            ),
+            "Researcher: first, get all positions using the get_positions tool. Then, for each position, fetch the latest price using the get_stock_price tool, the fundamental data using the get_stock_fundamentals tool, and the latest news using the get_company_news tool. Finally, return a list of structured JSON objects, each containing the symbol, price, the full fundamental data object, and news.",
+            "Strategist: always call the portfolio overview tool first to get the current account state. Then, based on the Researcher's data (including prices and fundamentals) and the overall portfolio health, propose a list of trade decisions in strict JSON form: [{action: 'buy'|'sell'|'hold', symbol: str, qty: int, reason: str, confidence: float (0-1)}, ...]. The reason should explicitly mention the key fundamentals that support the decision.",
+            "Safety: if confidence < 0.6 for any proposed trade, change the action to 'hold' for that trade.",
+            "Executor: for each trade in the list from the Strategist, if the action is 'buy' or 'sell', call the place_order tool with the correct parameters. Return a list of the order results.",
+            "Leader: coordinate the members, validate the JSON from the Strategist, and synthesize a final report of all actions taken.",
         ],
         show_members_responses=True,
         markdown=False,

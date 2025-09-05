@@ -13,6 +13,7 @@ dependencies = [
 	"google-generativeai>=0.8.5",
 	"requests>=2.32.5",
 	"urllib3>=2.5.0",
+    "yfinance",
 ]
 
 [project.optional-dependencies]
@@ -25,11 +26,9 @@ dev = [
 [tool.setuptools]
 packages = ["agno_trader"]
 
-[tool.uv.metadata]
-main = "agno_trader.main:main"
 
-[tool.uv.scripts]
-run = { cmd = "python -m agno_trader.main" }
+[project.scripts]
+run = "agno_trader.main:main"
 
 [tool.black]
 line-length = 88

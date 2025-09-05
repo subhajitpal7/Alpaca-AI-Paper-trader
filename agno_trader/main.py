@@ -10,9 +10,6 @@ load_dotenv()
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "symbol", help="Ticker symbol to analyze", default="AAPL", nargs="?"
-    )
     parser.add_argument("--model", help="Gemini model id", default="gemini-2.0-flash")
     parser.add_argument(
         "--live",
@@ -25,9 +22,9 @@ def main():
 
     # Example composite prompt: research price, propose trade and execute.
     task = (
-        f"Analyze {args.symbol} and get the account details  and suggest a paper trade."
+        f"Analyze the portfolio, get the account details, suggest paper trades, and execute them."
     )
-    print("Running trading team for:", args.symbol)
+    print("Running trading team for the entire portfolio.")
     report = team.print_response(task, stream=True)
     print(report)
 
