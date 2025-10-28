@@ -4,6 +4,7 @@ import time
 
 import requests
 from agno.tools import tool
+from typing import List, Optional
 
 _CACHE_FILE = os.path.join("tmp", "stock_price_cache.json")
 
@@ -108,3 +109,42 @@ def get_stock_price(
     return get_stock_price_raw(
         symbol, max_retries=max_retries, backoff_base=backoff_base
     )
+
+
+@tool(show_result=True, stop_after_tool_call=True)
+def get_multiple_stock_prices(symbols: List[str], max_retries: int = 3, backoff_base: float = 1.5) -> List[dict]:
+    """Agno tool wrapper that fetches prices for a list of symbols."""
+    prices = []
+    for symbol in symbols:
+        prices.append(get_stock_price_raw(symbol, max_retries=max_retries, backoff_base=backoff_base))
+    return prices
+
+def _alpha_vantage_overview(symbol: str, api_key: str) -> Optional[dict]:
+    try:
+        url = (
+            "https://www.alphavantage.co/query?function=OVERVIEW"
+            f"&symbol={symbol}&apikey={api_key}"
+        )
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        data = r.json()
+        return data
+    except Exception:
+        return None
+
+@tool(show_result=True, stop_after_tool_call=True)
+def get_stock_fundamentals(symbol: str, max_retries: int = 3, backoff_base: float = 1.5) -> dict:
+    """Agno tool wrapper that fetches fundamental data for a stock."""
+    av_key = os.getenv("ALPHAVANTAGE_API_KEY")
+    if not av_key:
+        return {"error": "Alpha Vantage API key not set (ALPHAVANTAGE_API_KEY)."}
+
+    for attempt in range(1, max_retries + 1):
+        overview = _alpha_vantage_overview(symbol, av_key)
+        if overview:
+            return overview
+
+        # if not successful, backoff and retry
+        time.sleep(backoff_base ** attempt)
+
+    return {"error": f"Failed to fetch fundamentals for {symbol} from Alpha Vantage after retries."}
